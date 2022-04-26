@@ -130,7 +130,7 @@ async fn try_main(args: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
             multiply_call.set_function(multiply);
             let mut multiply_params = multiply_call.init_params(2);
             multiply_params.reborrow().get(0).set_literal(4.0);
-            multiply_params.reborrow().get(0).set_literal(6.0);
+            multiply_params.reborrow().get(1).set_literal(6.0);
         }
 
         let multiply_result = request.send().pipeline.get_value();
