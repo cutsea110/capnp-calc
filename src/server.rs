@@ -1,12 +1,9 @@
-use capnp::primitive_list;
-use capnp::Error;
+use capnp::{capability::Promise, primitive_list, Error};
 use capnp_rpc::{rpc_twoparty_capnp, twoparty, ImbuedMessageBuilder, RpcSystem};
-use futures::future;
-use futures::{AsyncReadExt, FutureExt, TryFutureExt};
+use futures::{future, AsyncReadExt, FutureExt, TryFutureExt};
 use std::net::SocketAddr;
 
 use crate::calculator_capnp::calculator;
-use capnp::capability::Promise;
 
 struct ValueImpl {
     value: f64,
