@@ -107,8 +107,8 @@ async fn try_main(args: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     {
-        // 4 * 6 + 3
-        // 4 * 6 + 5
+        // (4 * 6) + 3
+        // (4 * 6) + 5
 
         println!("Pipelining eval() calls... ");
 
@@ -279,6 +279,8 @@ async fn try_main(args: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     {
+        // pow(2, (4 + 5))
+
         println!("Using a callback... ");
 
         let add = {
