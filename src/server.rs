@@ -1,8 +1,9 @@
 use capnp::primitive_list;
 use capnp::Error;
-use capnp_rpc::{rpc_twoparty_capnp, twoparty, RpcSystem};
+use capnp_rpc::{rpc_twoparty_capnp, twoparty, ImbuedMessageBuilder, RpcSystem};
 use futures::future;
 use futures::{AsyncReadExt, FutureExt, TryFutureExt};
+use std::net::SocketAddr;
 
 use crate::calculator_capnp::calculator;
 use capnp::capability::Promise;
@@ -67,13 +68,13 @@ fn evaluate_impl(
 
 struct FunctionImpl {
     param_count: u32,
-    body: ::capnp_rpc::ImbuedMessageBuilder<::capnp::message::HeapAllocator>,
+    body: ImbuedMessageBuilder<::capnp::message::HeapAllocator>,
 }
 impl FunctionImpl {
     fn new(param_count: u32, body: calculator::expression::Reader) -> ::capnp::Result<Self> {
         let mut result = Self {
             param_count,
-            body: ::capnp_rpc::ImbuedMessageBuilder::new(::capnp::message::HeapAllocator::new()),
+            body: ImbuedMessageBuilder::new(::capnp::message::HeapAllocator::new()),
         };
         result.body.set_root(body)?;
 
@@ -184,34 +185,32 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let addr = args[2]
-        .to_socket_addrs()
-        .unwrap()
+        .to_socket_addrs()?
         .next()
         .expect("could not parse address");
 
-    tokio::task::LocalSet::new()
-        .run_until(async move {
-            let listener = tokio::net::TcpListener::bind(&addr).await?;
-            let calc: calculator::Client = capnp_rpc::new_client(CalculatorImpl);
+    tokio::task::LocalSet::new().run_until(try_main(addr)).await
+}
 
-            loop {
-                let (stream, _) = listener.accept().await?;
-                stream.set_nodelay(true)?;
-                let (reader, writer) =
-                    tokio_util::compat::TokioAsyncReadCompatExt::compat(stream).split();
-                let network = twoparty::VatNetwork::new(
-                    reader,
-                    writer,
-                    rpc_twoparty_capnp::Side::Server,
-                    Default::default(),
-                );
-                let rpc_system = RpcSystem::new(Box::new(network), Some(calc.clone().client));
-                tokio::task::spawn_local(Box::pin(
-                    rpc_system
-                        .map_err(|e| println!("error: {:?}", e))
-                        .map(|_| ()),
-                ));
-            }
-        })
-        .await
+async fn try_main(addr: SocketAddr) -> Result<(), Box<dyn std::error::Error>> {
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    let calc: calculator::Client = capnp_rpc::new_client(CalculatorImpl);
+
+    loop {
+        let (stream, _) = listener.accept().await?;
+        stream.set_nodelay(true)?;
+        let (reader, writer) = tokio_util::compat::TokioAsyncReadCompatExt::compat(stream).split();
+        let rpc_network = Box::new(twoparty::VatNetwork::new(
+            reader,
+            writer,
+            rpc_twoparty_capnp::Side::Server,
+            Default::default(),
+        ));
+        let rpc_system = RpcSystem::new(rpc_network, Some(calc.clone().client));
+        tokio::task::spawn_local(Box::pin(
+            rpc_system
+                .map_err(|e| println!("error: {:?}", e))
+                .map(|_| ()),
+        ));
+    }
 }
