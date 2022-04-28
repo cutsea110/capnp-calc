@@ -69,7 +69,7 @@ async fn try_main(args: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     {
-        // 123 + 45 - 67
+        // (123 + 45) - 67
 
         println!("Using add and subtract... ");
         let add = {
@@ -111,7 +111,6 @@ async fn try_main(args: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
         // (4 * 6) + 5
 
         println!("Pipelining eval() calls... ");
-
         let add = {
             let mut request = calculator.get_operator_request();
             request.get().set_op(calculator::Operator::Add);
@@ -181,11 +180,11 @@ async fn try_main(args: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
 
     {
         // f(x, y) = x * 100 + y
-        // g(x) = f(x, x+1) * 2
+        // g(x) = f(x, x + 1) * 2
         // f(12, 34)
         // g(21)
-        println!("Defining functions... ");
 
+        println!("Defining functions... ");
         let add = {
             let mut request = calculator.get_operator_request();
             request.get().set_op(calculator::Operator::Add);
@@ -282,7 +281,6 @@ async fn try_main(args: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
         // pow(2, (4 + 5))
 
         println!("Using a callback... ");
-
         let add = {
             let mut request = calculator.get_operator_request();
             request.get().set_op(calculator::Operator::Add);
