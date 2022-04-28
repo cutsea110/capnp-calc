@@ -58,7 +58,7 @@ async fn try_main(args: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
     {
         // literal 123.0
 
-        println!("Evaluating a literal...");
+        println!("Evaluating a literal... ");
         let mut eval_request = calculator.evaluate_request();
         eval_request.get().init_expression().set_literal(123.0);
         let value = eval_request.send().pipeline.get_value();
